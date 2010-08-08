@@ -30,3 +30,19 @@ not new to Perl, so is aware of many coding improvements required of
 the Catalyst application.
 
 named after the book : JQuery from Novice to Ninja
+
+LICENSE
+
+Copyright (C) 2010, Jon Brookes,
+
+This module is free software.  You can redistribute it and/or
+modify it under the terms of the Artistic License 2.0. [1]
+
+This program is distributed in the hope that it will be useful,
+but without any warranty; without even the implied warranty of
+merchantability or fitness for a particular purpose.
+
+
+[1]
+
+http://www.opensource.org/licenses/artistic-license-2.0.php
