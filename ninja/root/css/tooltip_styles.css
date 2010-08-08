@@ -1,0 +1,14 @@
+code {font-size: 1.1em;}
+
+#livetip {
+  position: absolute;
+  background-color: #fcc;
+  padding: 4px;
+  border: 2px solid #c99;
+  border-radius: 4px;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+}
+a.alt {
+  float: right;
+}

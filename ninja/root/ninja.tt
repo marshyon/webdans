@@ -1,0 +1,111 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us">
+<head>
+	<title>[% title %]</title>
+
+        <link rel="stylesheet" href="/css/base.css" type="text/css" media="screen" charset="utf-8" />  
+        <link rel="stylesheet" href="/css/tooltip_styles.css" type="text/css" media="screen" charset="utf-8" />  
+	<link rel="stylesheet" href="/css/1jq.css" type="text/css" media="print, projection, screen" />
+        <link rel="stylesheet" href="/css/base.css" type="text/css" media="screen" charset="utf-8" />  
+	<link rel="stylesheet" href="/css/themes/blue/style.css" type="text/css" id="" media="print, projection, screen" />
+        <link rel="stylesheet" href="/css/redmond/jquery-ui-1.8.4.custom.css" type="text/css" id="" media="print, projection, screen" />
+
+
+	<script type="text/javascript" src="/lib/jquery-1.4.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-ui-1.8.4.custom.min.js"></script>
+	<script type="text/javascript" src="/js/jquery.tablesorter.js"></script>
+	<script type="text/javascript" src="/addons/pager/jquery.tablesorter.pager.js"></script>
+	<script type="text/javascript" src="/js/chili/movetip.js"></script>
+	<script type="text/javascript" src="/js/chili/chili-1.8b.js"></script>
+	<script type="text/javascript" src="/js/docs.js"></script>
+        [% IF tooltips %]
+        <script type="text/javascript" src="/js/movetip.js"></script>
+        <script type="text/javascript" src="/js/datadumper.js"></script>
+        <script type="text/javascript" src="/js/confirmation.js"></script>
+        [% END %]
+	<script type="text/javascript" src="/js/common.js"></script>
+
+</head>
+<body>
+
+<div id="container">
+    <div id="header">
+    </div>
+
+<div id="content">
+
+<h2>[% title %]</h2>
+[% nav %]
+
+<div id="mainContent" style="height: 120px;">
+[% content %]
+</div>
+
+<div id="msg"></div>
+<strong>status</strong>
+<div id="status"></div>
+
+<p id="disclaimer"> 
+
+to sort columns click on a title heading<br>
+
+keep holding the 'shift' key when clicking more than one heading to sort on multiple columns<br>
+
+</p> <input type="button" id="toggleButton" value="help"/>
+
+<p>Ninja - log viewer - for narcsworld</p>
+
+<div id="pager" class="pager">
+	<form>
+		<img src="/addons/pager/icons/first.png" class="first"/>
+		<img src="/addons/pager/icons/prev.png" class="prev"/>
+		<input type="text" class="pagedisplay"/>
+		<img src="/addons/pager/icons/next.png" class="next"/>
+		<img src="/addons/pager/icons/last.png" class="last"/>
+		 <select class="pagesize">
+			<option selected="selected"  value="10">10</option>
+			<option value="20">20</option>
+                        <option value="30">30</option>
+			<option  value="40">40</option>
+		</select> 
+               
+	</form>
+</div>
+
+<div id="ok-dialog-message" title="Enable URL">
+	<p>
+
+		<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>
+                <strong><div id="my_url">URL</div></strong>
+	</p>
+	<p>
+		request for whitelist clearance
+	</p>
+	<p>
+		Click OK to commit
+	</p>
+</div>
+
+<div id="dialog-message" title="Disable URL">
+	<p>
+
+		<span class="ui-icon ui-icon-circle-close" style="float:left; margin:0 7px 50px 0;"></span>
+                <strong><div id="my_url">URL</div></strong>
+	</p>
+	<p>
+		remove whitelist clearance
+	</p>
+	<p>
+		Click OK to commit
+	</p>
+</div>
+
+
+
+</div> <!-- end content-->
+</div> <!-- end container -->
+
+
+</body>
+</html>
