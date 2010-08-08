@@ -1,0 +1,31 @@
+WebDans
+
+Web interface for viewing and maintaining DansGuardian log files
+
+Alpha release
+
+Whilst barely working, the interface may already be used to summarise 
+log files by IP address, denied, posts and gets
+
+Client Side :
+
+Uses Jquery plugin 'tablesorter', Jqery ajax calls and other trickery to 
+try to make the experience of reading the logs as straight forward and
+pleasant as is reasonably possible
+
+Server Side :
+
+Based upon Catalyst framework using Template Toolkit 
+
+This part is written taking a lot of short cuts and currently suffers
+from hard coded pathin issues and does not at all use templating to 
+the full.
+
+The emphasis was put first on getting the client side working as quickly
+and painlessly as possible - taking just over 2 days to complete to this
+stage.
+
+The author is somewhat new to JQuery, relatively new to Catalyst but 
+not new to Perl, so is aware of many coding improvements required of
+the Catalyst application.
+
