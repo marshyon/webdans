@@ -1,6 +1,6 @@
 
 function get_ajax_status() {
-    $('#status').load('http://10.11.11.50:3000/send?action=status');
+    $('#status').load('http://localhost:3000/send?action=status');
 }
 
 $(document).ready(function() {
@@ -9,7 +9,7 @@ $(document).ready(function() {
 
 $.ajaxSetup({
     type: 'POST',
-    url: 'http://10.11.11.50:3000/send',
+    url: 'http://localhost:3000/send',
     timeout: 3000,
 });
 

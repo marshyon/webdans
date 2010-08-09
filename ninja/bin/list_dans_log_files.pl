@@ -24,7 +24,9 @@ if($qlog && $qip) {
     print '<table cellspacing="1" class="tablesorter"><thead><tr><th>Date</th><th>Address</th><th>Status</th><th>URL</th></tr></thead><tfoot><tr><th>Date</th><th>Address</th><th>Status</th><th>URL</th></tr></tfoot><tbody>';
 
     foreach my $line (@{$log_entries}) {
-        print "<tr><td>" . $line->{time_str} . "</td><td>" . $qip. "</td><td>" . $line->{status} . "</td><td><a href=\"".$line->{url} . "\">" . $line->{url_base} . "</a>";
+        my $status = $line->{status};
+        $status =~ s{\*}{}g;
+        print "<tr><td>" . $line->{time_str} . "</td><td>$qip</td><td>$status</td><td><a href=\"".$line->{url} . "\">" . $line->{url_base} . "</a>";
         if($line->{status} eq '*DENIED*') {
             print "&nbsp; <a title=\"";
             print join("<br>", @{$line->{'codes'}});

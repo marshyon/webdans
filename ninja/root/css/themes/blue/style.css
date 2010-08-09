@@ -24,9 +24,11 @@ table.tablesorter tbody td {
 	padding: 4px;
 	background-color: #FFF;
 	vertical-align: top;
+        height: 28px;
 }
 table.tablesorter tbody tr.odd td {
 	background-color:#F0F0F6;
+        height: 28px;
 }
 table.tablesorter thead tr .headerSortUp {
 	background-image: url(asc.gif);
