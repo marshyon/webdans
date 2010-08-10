@@ -1,6 +1,8 @@
 package ninja::Controller::Root;
 use Moose;
 use namespace::autoclean;
+use UUID::Tiny;
+use YAML;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -47,8 +49,6 @@ sub default :Path {
     $c->response->status(404);
 }
 
-
-
 sub ninja :Global {
     my ( $self, $c ) = @_;
     my $lol = $c->req->params->{lol};
@@ -71,9 +71,7 @@ sub ninja :Global {
         $c->stash->{content} = `$list_dans_command`;
         $c->stash->{nav} = "<a href=\"/ninja\">Home</a>";
     }
-
 }
-
 
 sub send :Global {
     my ( $self, $c ) = @_;
@@ -81,17 +79,19 @@ sub send :Global {
     my $name = $c->req->params->{name};
     my $action = $c->req->params->{action};
     my $request_dir = '/var/run/dans_controller/';
-    $c->stash->{status} = " SERVER UPTIME " . `uptime`;
     if($name && $action && $id) {
-        my $request_file = $request_dir . time() . ".req";
-        open (R, ">$request_file") or die "cant open $request_file for write : $!\n";
-        print R scalar(localtime()) . " :: START\n";
-        print R scalar(localtime()) . " :: id :: $id\n";
-        print R scalar(localtime()) . " :: name :: $name\n";
-        print R scalar(localtime()) . " :: action :: $action\n";
-        print R scalar(localtime()) . " :: END\n";
-        close R;
+        my $v1_mc_UUID_string  = create_UUID_as_string(UUID_V1);
+        my $request_file = $request_dir . $v1_mc_UUID_string . ".req";
+        my %req = (
+            'id' => $id,
+            'name' => $name,
+            'action' => $action,
+        );
+        YAML::DumpFile($request_file, %req);
     }
+    my $unblock_directory = '/var/run/dans_controller/';
+    my $status_file = $unblock_directory . "status.txt";
+    $c->stash->{server_status} = `cat $status_file` . " :: " . `uptime` ;
 }
 
 =head2 end

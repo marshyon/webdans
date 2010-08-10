@@ -23,6 +23,24 @@ if($qlog && $qip) {
 
     print '<table cellspacing="1" class="tablesorter"><thead><tr><th>Date</th><th>Address</th><th>Status</th><th>URL</th></tr></thead><tfoot><tr><th>Date</th><th>Address</th><th>Status</th><th>URL</th></tr></tfoot><tbody>';
 
+    my $whitelist = '/var/run/dans_controller/whitelist.conf';
+    my %whitelist_items = ();
+    my $fh = new IO::File;
+    if( ! -e $whitelist ) { system("touch $whitelist") }
+    if ($fh->open("< $whitelist")) {
+        while(<$fh>) {
+            chomp($_);
+            $whitelist_items{$_}++;
+        }
+        $fh->close;
+    } 
+    else {
+        die "cant open whitelist : $whitelist for read : $!\n";
+    }
+
+
+
+
     foreach my $line (@{$log_entries}) {
         my $status = $line->{status};
         $status =~ s{\*}{}g;
@@ -32,7 +50,13 @@ if($qlog && $qip) {
             print join("<br>", @{$line->{'codes'}});
             my $url_id = $line->{url_base};
             $url_id =~ s/\./_/g;
-            print "\" href=\"#row$c\">?</a><input style=\"height:30em;\" type=\"checkbox\" id=\"checkbx_".$c."-$url_id\">";
+            my $checked = '';
+
+            if($whitelist_items{$line->{url_base}}) {
+               $checked = 'checked = yes'
+            }
+            
+            print "\" href=\"#row$c\">?</a><input style=\"height:30em;\" type=\"checkbox\" id=\"checkbx_".$c."-$url_id\" $checked>";
         }
         print "</td></tr>\n";
         $c++;

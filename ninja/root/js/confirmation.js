@@ -1,10 +1,12 @@
 
 function get_ajax_status() {
+    //$('#status').text('are those my feet?');
     $('#status').load('http://localhost:3000/send?action=status');
 }
 
 $(document).ready(function() {
-
+get_ajax_status();
+//console.log('page loaded');
 // set up ajax defaults
 
 $.ajaxSetup({
@@ -16,8 +18,7 @@ $.ajaxSetup({
 // timer loop to get status of server
 
 
-var clearInterval = setInterval( "this.get_ajax_status()" , 3000);
-get_ajax_status();
+var clearInterval = setInterval( "get_ajax_status()" , 6000);
 //clearInterval(animationTimer);
 
 

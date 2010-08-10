@@ -3,11 +3,18 @@
 use strict;
 
 use Net::Server::Daemonize qw(daemonize is_root_user check_pid_file);
+use IO::Dir;
+use IO::File;
+use YAML;
+use Data::Dumper;
+
 
 my $pidfile           = '/var/run/dans_controller.pid';
 my $unblock_directory = '/var/run/dans_controller/';
-my $restart_cmd       = '/etc/init.d/dansguardian stop';
-$restart_cmd .= ' /etc/init.d/dansguardian start';
+my $status_file = $unblock_directory . "status.txt";
+my $whitelist = '/var/run/dans_controller/whitelist.conf';
+my $start_cmd .= ' /etc/init.d/dansguardian start';
+my $stop_cmd .= ' /etc/init.d/dansguardian stop';
 my @email_alerts = qw(marshyon@gmail.com nigel.thompson@gmail.com);
 my $smtp_host    = 'localhost';
 my $smtp_from    = 'dans_guardian_daemon@myhost.com';
@@ -26,36 +33,104 @@ if ( !$debug ) {
 
 while (1) {
     print "sleeping ....\n" if $debug;
-    sleep 3;
-    my @unblocks =
+    sleep 10;
+    my %unblocks =
       check_for_unblock_requests( { 'dir' => $unblock_directory } );
-    if (@unblocks) {
-        unblock_sites( { 'sites' => \@unblocks } );
-        restart_dansguardian( { 'cmd' => $restart_cmd } );
+    if (%unblocks) {
+        update_whitelist( { 'sites' => \%unblocks } );
+        restart_dansguardian( { 'start' => $start_cmd, 'stop' => $stop_cmd } );
     }
-    check_dansguardian_process(
-        {
-            'emails'  => \@email_alerts,
-            'host'    => $smtp_host,
-            'from'    => $smtp_from,
-            'subject' => $subject
-        }
-    );
+    #check_dansguardian_process(
+    #    {
+    #        'emails'  => \@email_alerts,
+    #        'host'    => $smtp_host,
+    #        'from'    => $smtp_from,
+    #        'subject' => $subject
+    #    }
+    #);
 }
 
 sub check_for_unblock_requests {
     my ($param) = @_;
     my $d = $param->{'dir'};
+    print"checking for request files in $d\n" if $debug;
+
+    my %summary = ();
+    my %dir = ();
+    tie %dir, 'IO::Dir', $d;
+    foreach (keys %dir) {
+        next unless /\.req$/;
+        print "$_\n" if $debug; 
+        my %req = ();
+        eval {
+            %req = YAML::LoadFile("$d$_");
+            unlink("$d$_");
+        };
+        if ($@) {
+            print "Error parsing file : $@\n" ;
+            return;
+        }
+        
+        print "name :: $req{'name'}\n";
+        print "action :: $req{'action'}\n";
+        print "id:: $req{'id'}\n";
+        update_status("request files located, about to process");
+        my $addr = $req{'id'};
+        $addr =~ s{ ^\#checkbx_ \d+ - }{}mxs;
+        $addr =~ s{_}{\.}mxgs;
+        $summary{$req{'action'}}->{$addr}++;
+    }
+    return %summary;
 }
 
-sub unblock_sites {
+sub update_whitelist {
     my ($param) = @_;
     my $s = $param->{sites};
+
+    my %whitelist_items = ();
+    my $fh = new IO::File;
+    if( ! -e $whitelist ) { system("touch $whitelist") }
+    if ($fh->open("< $whitelist")) {
+        while(<$fh>) {
+            chomp($_);
+            $whitelist_items{$_}++;
+        }
+        $fh->close;
+    } 
+    else {
+        die "cant open whitelist : $whitelist for read : $!\n";
+    }
+
+    foreach my $addition ( keys(%{$s->{'add'}} ) ) {
+        print ">>DEBUG>> addition : $addition\n";
+        $whitelist_items{$addition}++;
+    }
+
+
+    if ($fh->open("> $whitelist")) {
+        ITEM:
+        foreach my $item ( sort( keys(%whitelist_items ) ) ) {
+            next ITEM if ($s->{'remove'}->{$item});
+            print $fh "$item\n";
+        }
+        $fh->close;
+    }
+    else {
+        die "cant open whitelist : $whitelist for write : $!\n";
+    }
+    update_status("request files located commited");
 }
 
 sub restart_dansguardian {
     my ($param) = @_;
-    my $c = $param->{cmd};
+    my $start = $param->{'start'};
+    my $stop = $param->{'stop'};
+    print ">>DEBUG>> stopping with ..($stop)\n";
+    update_status("stopping dansguardian ...");
+    #system($stop);
+    update_status("starting dansguardian ...");
+    #system($start);
+    update_status("dansguardian restarted");
 }
 
 sub check_dansguardian_process {
@@ -65,4 +140,19 @@ sub check_dansguardian_process {
     my $f       = $param->{from};
     my $s       = $param->{subject};
 
+}
+
+sub update_status {
+
+    my $status = shift;
+
+    if( ! -e $status_file ) { system("touch $status_file") }
+    my $sfh = new IO::File;
+    if ($sfh->open("> $status_file")) {
+        print $sfh scalar(localtime) . " :: " . $status;
+        close $sfh;
+    }
+    else {
+        die "can't open status file $status_file : $!\n";
+    }
 }
