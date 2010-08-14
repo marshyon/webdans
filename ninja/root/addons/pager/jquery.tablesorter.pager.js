@@ -1,9 +1,17 @@
+
+
 (function($) {
 	$.extend({
 		tablesorterPager: new function() {
 			
 			function updatePageDisplay(c) {
 				var s = $(c.cssPageDisplay,c.container).val((c.page+1) + c.seperator + c.totalPages);	
+
+                                // TERRIBLE HACK - should be in someway 'overridden' so as not to have to 
+                                //                 change this wonderful bit of code here written by someone 
+                                //                 that knows more about jquery and javascript than I do
+                                update_table_checkboxes();
+                                // TERRIBLE HACK - ends.
 			}
 			
 			function setPageSize(table,size) {

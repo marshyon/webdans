@@ -78,7 +78,7 @@ sub send :Global {
     my $id = $c->req->params->{id};
     my $name = $c->req->params->{name};
     my $action = $c->req->params->{action};
-    my $request_dir = '/var/run/dans_controller/';
+    my $request_dir = '/etc/dansguardian/dans_controller/';
     if($name && $action && $id) {
         my $v1_mc_UUID_string  = create_UUID_as_string(UUID_V1);
         my $request_file = $request_dir . $v1_mc_UUID_string . ".req";
@@ -89,7 +89,7 @@ sub send :Global {
         );
         YAML::DumpFile($request_file, %req);
     }
-    my $unblock_directory = '/var/run/dans_controller/';
+    my $unblock_directory = '/etc/dansguardian/dans_controller/';
     my $status_file = $unblock_directory . "status.txt";
     $c->stash->{server_status} = `cat $status_file` . " :: " . `uptime` ;
 }

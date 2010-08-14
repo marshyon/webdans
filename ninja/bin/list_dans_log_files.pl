@@ -23,7 +23,7 @@ if($qlog && $qip) {
 
     print '<table cellspacing="1" class="tablesorter"><thead><tr><th>Date</th><th>Address</th><th>Status</th><th>URL</th></tr></thead><tfoot><tr><th>Date</th><th>Address</th><th>Status</th><th>URL</th></tr></tfoot><tbody>';
 
-    my $whitelist = '/var/run/dans_controller/whitelist.conf';
+    my $whitelist = '/etc/dansguardian/lists/whitelist.conf';
     my %whitelist_items = ();
     my $fh = new IO::File;
     if( ! -e $whitelist ) { system("touch $whitelist") }
@@ -44,6 +44,7 @@ if($qlog && $qip) {
     foreach my $line (@{$log_entries}) {
         my $status = $line->{status};
         $status =~ s{\*}{}g;
+        $status =~ s{DENIED}{DNED}g;
         print "<tr><td>" . $line->{time_str} . "</td><td>$qip</td><td>$status</td><td><a href=\"".$line->{url} . "\">" . $line->{url_base} . "</a>";
         if($line->{status} eq '*DENIED*') {
             print "&nbsp; <a title=\"";

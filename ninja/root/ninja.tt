@@ -3,8 +3,26 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us">
 <head>
 	<title>[% title %]</title>
+        <script type="text/javascript">
 
+        document.write('<div id="loading"><p>loading ...</p></div><style "text/css">#wrapper960{visibility:hidden}#loading{margin:1px auto;width:1100px;height:0px;color:#00eeee;border:0px solid #777;padding:0px;text-align:left;}</style>');
+        
+        </script>
         <link rel="stylesheet" href="/css/base.css" type="text/css" media="screen" charset="utf-8" />  
+	<script type="text/javascript" src="/lib/jquery-1.4.min.js"></script>
+        <script type="text/javascript">
+
+        $(window).load(function() {
+        $('#loading').fadeOut(2000);
+        $('#wrapper960').hide();
+                $('#wrapper960').css('visibility','visible');
+        $('#wrapper960').fadeIn(1);
+        });
+
+        </script>
+
+
+
         <link rel="stylesheet" href="/css/tooltip_styles.css" type="text/css" media="screen" charset="utf-8" />  
 	<link rel="stylesheet" href="/css/1jq.css" type="text/css" media="print, projection, screen" />
         <link rel="stylesheet" href="/css/base.css" type="text/css" media="screen" charset="utf-8" />  
@@ -12,7 +30,6 @@
         <link rel="stylesheet" href="/css/redmond/jquery-ui-1.8.4.custom.css" type="text/css" id="" media="print, projection, screen" />
 
 
-	<script type="text/javascript" src="/lib/jquery-1.4.min.js"></script>
         <script type="text/javascript" src="/js/jquery-ui-1.8.4.custom.min.js"></script>
 	<script type="text/javascript" src="/js/jquery.tablesorter.js"></script>
 	<script type="text/javascript" src="/addons/pager/jquery.tablesorter.pager.js"></script>
@@ -28,6 +45,8 @@
 
 </head>
 <body>
+
+<div id="wrapper960"><!--wrapper960-->
 
 <div id="container">
     <div id="header">
@@ -106,6 +125,7 @@ keep holding the 'shift' key when clicking more than one heading to sort on mult
 </div> <!-- end content-->
 </div> <!-- end container -->
 
+</div"><!--wrapper960-->
 
 </body>
 </html>

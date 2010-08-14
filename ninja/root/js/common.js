@@ -14,7 +14,7 @@ $(document).ready(function() {
             $(function() {
                 $("table")
                         .tablesorter({widthFixed: true, widgets: ['zebra']})
-                        .tablesorterPager({container: $("#pager")});
+                        .tablesorterPager({container: $("#pager")}) 
             });
 
             var height = $('.tablesorter').height() + 70;

@@ -10,9 +10,9 @@ use Data::Dumper;
 
 
 my $pidfile           = '/var/run/dans_controller.pid';
-my $unblock_directory = '/var/run/dans_controller/';
+my $unblock_directory = '/etc/dansguardian/dans_controller/';
 my $status_file = $unblock_directory . "status.txt";
-my $whitelist = '/var/run/dans_controller/whitelist.conf';
+my $whitelist = '/etc/dansguardian/dans_controller/whitelist.conf';
 my $start_cmd .= ' /etc/init.d/dansguardian start';
 my $stop_cmd .= ' /etc/init.d/dansguardian stop';
 my @email_alerts = qw(marshyon@gmail.com nigel.thompson@gmail.com);
