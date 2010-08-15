@@ -3,6 +3,7 @@ use Moose;
 use namespace::autoclean;
 use UUID::Tiny;
 use YAML;
+use Config::Std;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -57,6 +58,9 @@ sub ninja :Global {
     my $log = $c->req->params->{log};
     my $curr_path = `pwd`;
     chomp($curr_path);
+    my %cfg = get_config();
+    $c->stash->{server_address} = $cfg{'srv'};
+    $c->stash->{server_port} = $cfg{'prt'};
     if($ip && $log) {
         $c->stash->{tooltips} = 1;
         my $list_dans_command = $curr_path . "/bin/list_dans_log_files.pl -l $log -i $ip";
@@ -112,6 +116,18 @@ sub send :Global {
 Attempt to render a view, if needed.
 
 =cut
+
+sub get_config {
+    my $curr_path = `pwd`;
+    chomp($curr_path);
+    my $main_config = $curr_path . '/main.cfg';
+    read_config $main_config => my %config;
+    my %cfg = ();
+    $cfg{srv} = $config{'webdans'}{'webservice_address'};
+    $cfg{prt} = $config{'webdans'}{'webservice_port'};
+    return %cfg;
+}
+
 
 sub end : ActionClass('RenderView') {}
 
