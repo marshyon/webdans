@@ -31,6 +31,7 @@
 
 
         <script type="text/javascript" src="/js/jquery-ui-1.8.4.custom.min.js"></script>
+	<script type="text/javascript" src="/js/update.js"></script>
 	<script type="text/javascript" src="/js/jquery.tablesorter.js"></script>
 	<script type="text/javascript" src="/addons/pager/jquery.tablesorter.pager.js"></script>
 	<script type="text/javascript" src="/js/chili/movetip.js"></script>
@@ -96,10 +97,10 @@ keep holding the 'shift' key when clicking more than one heading to sort on mult
 	<p>
 
 		<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>
-                <strong><div id="my_url">URL</div></strong>
+                <strong>Removing an address from block list</strong>
 	</p>
 	<p>
-		request for whitelist clearance
+		add to whitelist clearance
 	</p>
 	<p>
 		Click OK to commit
@@ -110,7 +111,7 @@ keep holding the 'shift' key when clicking more than one heading to sort on mult
 	<p>
 
 		<span class="ui-icon ui-icon-circle-close" style="float:left; margin:0 7px 50px 0;"></span>
-                <strong><div id="my_url">URL</div></strong>
+                <strong>Adding an address to block</strong>
 	</p>
 	<p>
 		remove whitelist clearance

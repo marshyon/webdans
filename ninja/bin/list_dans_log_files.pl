@@ -19,11 +19,15 @@ my $qip = $opts{i};
 my $c = 0;
 
 if($qlog && $qip) {
+    my $jscript_checked = "<script type=\"text/javascript\">\n";
+    my $debug = 'debug.txt';
+    #open (D, ">>$debug");
+    #use Data::Dumper;
     my $log_entries = extract_log_enties_from_log({log => "$logs_files$qlog", ip => $qip});
 
-    print '<table cellspacing="1" class="tablesorter"><thead><tr><th>Date</th><th>Address</th><th>Status</th><th>URL</th></tr></thead><tfoot><tr><th>Date</th><th>Address</th><th>Status</th><th>URL</th></tr></tfoot><tbody>';
+    print '<table cellspacing="1" class="tablesorter"><thead><tr><th>Date</th><th>Address</th><th>Status</th><th>URL</th><th></th></tr></thead><tfoot><tr><th>Date</th><th>Address</th><th>Status</th><th>URL</th><th></th></tr></tfoot><tbody>';
 
-    my $whitelist = '/etc/dansguardian/lists/whitelist.conf';
+    my $whitelist = '/etc/dansguardian/dans_controller/whitelist.conf';
     my %whitelist_items = ();
     my $fh = new IO::File;
     if( ! -e $whitelist ) { system("touch $whitelist") }
@@ -38,13 +42,24 @@ if($qlog && $qip) {
         die "cant open whitelist : $whitelist for read : $!\n";
     }
 
+    #print D Dumper(\%whitelist_items);
 
-
-
+    my %seen = ();
     foreach my $line (@{$log_entries}) {
         my $status = $line->{status};
         $status =~ s{\*}{}g;
-        $status =~ s{DENIED}{DNED}g;
+        my $check_box = '';
+        #my $denied_icon = '<span class="ui-icon ui-icon-circle-close" style="float:left; margin:0 7px 50px 0;"></span>';
+        my $denied_icon = '<span class="ui-icon ui-icon-alert" style="float:left; "></span>';
+        #my $permitted_icon = '<span class="ui-icon ui-icon-circle-check " style="float:left; "></span>';
+        my $info_icon = '<span class="ui-icon ui-icon-info " style="float:left; "></span>';
+        #my $info_icon = '<span class="ui-icon ui-icon-info"></span>';
+        my $permitted_icon = '';
+        $status =~ s{DENIED}{$denied_icon}g;
+        $status =~ s{(?:GET|POST)}{$permitted_icon}g;
+        $status .= '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+        my $ub = $line->{url_base};
+        #print D "??[$ub]\n";
         print "<tr><td>" . $line->{time_str} . "</td><td>$qip</td><td>$status</td><td><a href=\"".$line->{url} . "\">" . $line->{url_base} . "</a>";
         if($line->{status} eq '*DENIED*') {
             print "&nbsp; <a title=\"";
@@ -52,20 +67,28 @@ if($qlog && $qip) {
             my $url_id = $line->{url_base};
             $url_id =~ s/\./_/g;
             my $checked = '';
-
-            if($whitelist_items{$line->{url_base}}) {
-               $checked = 'checked = yes'
+            my $lookup = $whitelist_items{$ub};
+            #print D ">>[$ub]->[$lookup]->".Dumper(\%whitelist_items)."\n" if $lookup;
+            if($lookup) {
+               if(! $seen{$ub}) {
+                   my $ub_str = $ub;
+                   $ub_str =~ s/\./_/g;
+                   $jscript_checked .= "hashUriMods[\"$ub_str\"] = \"add\";\n";
+                   $seen{$ub}++;
+               }
+               $checked = 'checked="yes"';
             }
             
-            print "\" href=\"#row$c\">?</a><input style=\"height:30em;\" type=\"checkbox\" id=\"checkbx_".$c."-$url_id\" $checked>";
+            print "\" href=\"#row$c\">$info_icon</a>";
+            $check_box = "<input style=\"height:30em;\" type=\"checkbox\" id=\"checkbx_".$c."-$url_id\" $checked>";
         }
-        print "</td></tr>\n";
+        print "</td><td>$check_box</td></tr>\n";
         $c++;
     }
     print "</tbody></table>\n";
+    print "$jscript_checked\nupdate_table_checkboxes();\n</script>";
 
-#    print Dumper($log_entries);
-
+    #close D;
 }
 else {
     tie %dir, 'IO::Dir', $logs_files;

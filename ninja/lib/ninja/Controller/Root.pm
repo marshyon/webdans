@@ -80,14 +80,27 @@ sub send :Global {
     my $action = $c->req->params->{action};
     my $request_dir = '/etc/dansguardian/dans_controller/';
     if($name && $action && $id) {
+
+        my $curr_path = `pwd`;
+        chomp($curr_path);
+        my $log_file_dir = $curr_path . "/log/";
+        system("mkdir $log_file_dir") unless ( -d $log_file_dir );
+        my $log_file = $log_file_dir . "changes.log";
+        
         my $v1_mc_UUID_string  = create_UUID_as_string(UUID_V1);
         my $request_file = $request_dir . $v1_mc_UUID_string . ".req";
+        my $client_address = $c->req->address();
         my %req = (
             'id' => $id,
             'name' => $name,
             'action' => $action,
+            'client' => $client_address,
         );
         YAML::DumpFile($request_file, %req);
+        my $log_entry = $client_address . " :: $id :: $name :: $action";
+        open(LOG, ">>$log_file") or die "can't open log [$log_file_dir][$log_file] for write : $!\n";
+        print LOG scalar(localtime()) . " :: " . $log_entry . "\n";
+        close LOG;
     }
     my $unblock_directory = '/etc/dansguardian/dans_controller/';
     my $status_file = $unblock_directory . "status.txt";

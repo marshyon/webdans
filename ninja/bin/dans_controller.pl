@@ -8,13 +8,12 @@ use IO::File;
 use YAML;
 use Data::Dumper;
 
-
 my $pidfile           = '/var/run/dans_controller.pid';
 my $unblock_directory = '/etc/dansguardian/dans_controller/';
-my $status_file = $unblock_directory . "status.txt";
-my $whitelist = '/etc/dansguardian/dans_controller/whitelist.conf';
+my $status_file       = $unblock_directory . "status.txt";
+my $whitelist         = '/etc/dansguardian/dans_controller/whitelist.conf';
 my $start_cmd .= ' /etc/init.d/dansguardian start';
-my $stop_cmd .= ' /etc/init.d/dansguardian stop';
+my $stop_cmd  .= ' /etc/init.d/dansguardian stop';
 my @email_alerts = qw(marshyon@gmail.com nigel.thompson@gmail.com);
 my $smtp_host    = 'localhost';
 my $smtp_from    = 'dans_guardian_daemon@myhost.com';
@@ -34,12 +33,15 @@ if ( !$debug ) {
 while (1) {
     print "sleeping ....\n" if $debug;
     sleep 10;
-    my %unblocks =
+    my ($unblocks, $emails) =
       check_for_unblock_requests( { 'dir' => $unblock_directory } );
-    if (%unblocks) {
-        update_whitelist( { 'sites' => \%unblocks } );
+    if (%{$unblocks}) {
+        print Dumper( $unblocks );
+        print Dumper( $emails );
+        update_whitelist( { 'sites' => $unblocks } );
         restart_dansguardian( { 'start' => $start_cmd, 'stop' => $stop_cmd } );
     }
+
     #check_dansguardian_process(
     #    {
     #        'emails'  => \@email_alerts,
@@ -53,34 +55,37 @@ while (1) {
 sub check_for_unblock_requests {
     my ($param) = @_;
     my $d = $param->{'dir'};
-    print"checking for request files in $d\n" if $debug;
+    print "checking for request files in $d\n" if $debug;
 
-    my %summary = ();
-    my %dir = ();
+    my %summary_by_req = ();
+    my %summary_by_addr= ();
+    my %dir     = ();
     tie %dir, 'IO::Dir', $d;
-    foreach (keys %dir) {
+    foreach ( keys %dir ) {
         next unless /\.req$/;
-        print "$_\n" if $debug; 
+        print "$_\n" if $debug;
         my %req = ();
         eval {
             %req = YAML::LoadFile("$d$_");
             unlink("$d$_");
         };
         if ($@) {
-            print "Error parsing file : $@\n" ;
+            print "Error parsing file : $@\n";
             return;
         }
-        
-        print "name :: $req{'name'}\n";
-        print "action :: $req{'action'}\n";
-        print "id:: $req{'id'}\n";
+
+        print "name :: $req{'name'}\n"     if $debug;
+        print "action :: $req{'action'}\n" if $debug;
+        print "id:: $req{'id'}\n"          if $debug;
+        print "client:: $req{'client'}\n"          if $debug;
         update_status("request files located, about to process");
         my $addr = $req{'id'};
         $addr =~ s{ ^\#checkbx_ \d+ - }{}mxs;
         $addr =~ s{_}{\.}mxgs;
-        $summary{$req{'action'}}->{$addr}++;
+        $summary_by_req{ $req{'action'} }->{$addr}++;
+        $summary_by_addr{ $req{'client'} }->{ $req{'action'} }->{ $addr }++;
     }
-    return %summary;
+    return (\%summary_by_req, \%summary_by_addr);
 }
 
 sub update_whitelist {
@@ -88,29 +93,28 @@ sub update_whitelist {
     my $s = $param->{sites};
 
     my %whitelist_items = ();
-    my $fh = new IO::File;
-    if( ! -e $whitelist ) { system("touch $whitelist") }
-    if ($fh->open("< $whitelist")) {
-        while(<$fh>) {
+    my $fh              = new IO::File;
+    if ( !-e $whitelist ) { system("touch $whitelist") }
+    if ( $fh->open("< $whitelist") ) {
+        while (<$fh>) {
             chomp($_);
             $whitelist_items{$_}++;
         }
         $fh->close;
-    } 
+    }
     else {
         die "cant open whitelist : $whitelist for read : $!\n";
     }
 
-    foreach my $addition ( keys(%{$s->{'add'}} ) ) {
-        print ">>DEBUG>> addition : $addition\n";
+    foreach my $addition ( keys( %{ $s->{'add'} } ) ) {
+        print ">>DEBUG>> addition : $addition\n" if $debug;
         $whitelist_items{$addition}++;
     }
 
-
-    if ($fh->open("> $whitelist")) {
-        ITEM:
-        foreach my $item ( sort( keys(%whitelist_items ) ) ) {
-            next ITEM if ($s->{'remove'}->{$item});
+    if ( $fh->open("> $whitelist") ) {
+      ITEM:
+        foreach my $item ( sort( keys(%whitelist_items) ) ) {
+            next ITEM if ( $s->{'remove'}->{$item} );
             print $fh "$item\n";
         }
         $fh->close;
@@ -123,12 +127,14 @@ sub update_whitelist {
 
 sub restart_dansguardian {
     my ($param) = @_;
-    my $start = $param->{'start'};
-    my $stop = $param->{'stop'};
-    print ">>DEBUG>> stopping with ..($stop)\n";
+    my $start   = $param->{'start'};
+    my $stop    = $param->{'stop'};
+    print ">>DEBUG>> stopping with ..($stop)\n" if $debug;
     update_status("stopping dansguardian ...");
+
     #system($stop);
     update_status("starting dansguardian ...");
+
     #system($start);
     update_status("dansguardian restarted");
 }
@@ -146,9 +152,9 @@ sub update_status {
 
     my $status = shift;
 
-    if( ! -e $status_file ) { system("touch $status_file") }
+    if ( !-e $status_file ) { system("touch $status_file") }
     my $sfh = new IO::File;
-    if ($sfh->open("> $status_file")) {
+    if ( $sfh->open("> $status_file") ) {
         print $sfh scalar(localtime) . " :: " . $status;
         close $sfh;
     }
