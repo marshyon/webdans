@@ -1,0 +1,18 @@
+[dans_controller]
+whitelist: /etc/dansguardian/lists/exceptionsitelist
+debug: 0
+sleep: 5
+pidfile: /var/run/dans_controller.pid
+unblock_directory: /etc/dansguardian/dans_controller/
+status_file: status.txt
+start_cmd: /etc/init.d/dansguardian start
+stop_cmd: /etc/init.d/dansguardian stop
+email_alerts: email1@somewhere.com 
+email_alerts: email2@somewhere.com 
+smtp_host: localhost
+smtp_from: dans_guardian_daemon@myhost.com
+subject: dans_gaurdian controller
+
+[webdans]
+webservice_address: http://dans.local.net
+webservice_port: 3000
