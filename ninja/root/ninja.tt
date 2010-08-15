@@ -19,6 +19,21 @@
         $('#wrapper960').fadeIn(1);
         });
 
+        function get_ajax_status() {
+            $('#status').load('[% server_address %]:[% server_port %]/send?action=status');
+        }
+
+        $(document).ready(function() {
+
+            get_ajax_status();
+
+            // set up ajax defaults
+            $.ajaxSetup({
+                type: 'POST',
+                url: '[% server_address %]:[% server_port %]/send',
+                timeout: 3000,
+            });
+        });
         </script>
 
 

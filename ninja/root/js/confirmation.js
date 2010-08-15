@@ -1,22 +1,10 @@
-function get_ajax_status() {
-    $('#status').load('http://10.11.11.50:3000/send?action=status');
-}
-
 var hashUriMods = new Object();
 
 $(document).ready(function() {
 
     get_ajax_status();
-    // set up ajax defaults
-
-    $.ajaxSetup({
-        type: 'POST',
-        url: 'http://10.11.11.50:3000/send',
-        timeout: 3000,
-    });
 
     // timer loop to get status of server
-
     var clearInterval = setInterval("get_ajax_status()", 60000);
     //clearInterval(animationTimer);
 
