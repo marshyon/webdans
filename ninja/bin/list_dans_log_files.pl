@@ -6,13 +6,20 @@ use IO::File;
 use Data::Dumper;
 use Date::Format;
 use Getopt::Std;
+use Config::Std;
+
 
 my %opts = ();
-getopts('l:i:', \%opts);  # options as above. Values in %opts
+getopts('l:i:c:', \%opts);  # options as above. Values in %opts
+
+my $main_config = $opts{c} || 'main.cfg';
+print_help() unless ( -e $main_config );
 
 my $match = '^access\.log.*';
 my $logs_files = '/var/log/dansguardian/';
 my %dir = ();
+
+read_config $main_config => my %config;
 
 my $qlog = $opts{l};
 my $qip = $opts{i};
@@ -27,7 +34,11 @@ if($qlog && $qip) {
 
     print '<table cellspacing="1" class="tablesorter"><thead><tr><th>Date</th><th>Address</th><th>Status</th><th>URL</th><th></th></tr></thead><tfoot><tr><th>Date</th><th>Address</th><th>Status</th><th>URL</th><th></th></tr></tfoot><tbody>';
 
-    my $whitelist = '/etc/dansguardian/dans_controller/whitelist.conf';
+
+
+
+    my $whitelist = $config{'dans_controller'}{'whitelist'};
+    #my $whitelist = '/etc/dansguardian/dans_controller/whitelist.conf';
     my %whitelist_items = ();
     my $fh = new IO::File;
     if( ! -e $whitelist ) { system("touch $whitelist") }
@@ -183,5 +194,24 @@ sub extract_log_enties_from_log {
     $fh->close;
     }
     return \@log_entries;
+}
+
+sub print_help {
+    print <<END;
+
+    $0 -c <configuratin file>
+
+configuration file 'main.cfg' is to be found at the base of the webdans directory
+
+either change to this directory and try to run this script again or else specify 
+it's full path 
+
+eg./
+
+    $0 -c /home/joe/webdans/main.cfg
+
+END
+    exit(1);
+
 }
 
