@@ -1,1 +1,1 @@
-[% server_status %]
+[% server_status %] [% user %]
