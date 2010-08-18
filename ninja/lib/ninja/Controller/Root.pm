@@ -4,6 +4,7 @@ use namespace::autoclean;
 use UUID::Tiny;
 use YAML;
 use Config::Std;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -32,8 +33,6 @@ The root page (/)
 sub index :Path :Args(0) {
     my ( $self, $c ) = @_;
 
-    # Hello World
-    #$c->response->body( $c->welcome_message );
     $c->res->redirect("/ninja");
     
 }
@@ -59,6 +58,8 @@ sub ninja :Global {
     my $curr_path = `pwd`;
     chomp($curr_path);
     my %cfg = get_config();
+    my $uid;
+    $c->stash->{user} = $c->session->{'date_str'} ;
     $c->stash->{server_address} = $cfg{'srv'};
     $c->stash->{server_port} = $cfg{'prt'};
     if($ip && $log) {
@@ -83,6 +84,7 @@ sub send :Global {
     my $name = $c->req->params->{name};
     my $action = $c->req->params->{action};
     my $request_dir = '/etc/dansguardian/dans_controller/';
+    $c->stash->{user} = " date :: " . $c->session->{'date_str'} . " session_id :: " . $c->session->{'session_id'};
     if($name && $action && $id) {
 
         my $curr_path = `pwd`;
@@ -111,6 +113,28 @@ sub send :Global {
     $c->stash->{server_status} = `cat $status_file` . " :: " . `uptime` ;
 }
 
+sub login_status :Global {
+    my ( $self, $c ) = @_;
+        my $json = new JSON;
+        my %stat_str = ( 
+                         'user-login-status' => $c->session->{'user-logged-in'},
+                         'login-ok' => $c->session->{'login-ok'},
+                       ) ;
+        my $json_text   = $json->encode(\%stat_str);
+
+    $c->stash->{'login_status'} = $json_text;
+    $c->stash->{'session_id'} = $c->session->{'user-logged-in'};
+}
+
+sub banned :Global {
+    my ( $self, $c ) = @_;
+    my $status = 'nada';
+    if($c->sessionid) {
+        $status = $c->sessionid();
+    }
+    $c->stash->{'login_status'} = $status;
+}
+
 =head2 end
 
 Attempt to render a view, if needed.
@@ -126,6 +150,55 @@ sub get_config {
     $cfg{srv} = $config{'webdans'}{'webservice_address'};
     $cfg{prt} = $config{'webdans'}{'webservice_port'};
     return %cfg;
+}
+
+sub login :Global {
+
+    my ( $self, $c ) = @_;
+    if ( $c->req->params->{'logout'} ) {
+        $c->logout();
+        $c->delete_session('logged out');
+    }
+
+    use Data::Dumper;
+    if (    my $user = $c->req->params->{user}
+        and my $password = $c->req->params->{password} )
+    {
+        if (
+            $c->authenticate(
+                {
+                    username => $user,
+                    password => $password
+                }
+            )
+          )
+        {
+        my $roles = $c->user->{'roles'};
+        my @rls = $roles;
+            $c->res->body( "<span class=\"ui-icon ui-icon-circle-check\" style=\"float:left; margin:0 7px 50px 0;\"></span>
+" );
+        $c->session->{'date_str'} = scalar(localtime());
+        $c->session->{'session_id'} = $c->sessionid();
+        $c->session->{'user-logged-in'} = $c->req->params->{user} . ' logged in';
+        $c->session->{'login-ok'} = 1;
+        }
+        else {
+
+            # login incorrect
+            $c->res->body( '<span class="ui-icon ui-icon-circle-close"></span>' );
+            $c->logout();
+            $c->session->{'login-ok'} = 0;
+            $c->delete_session('logged out');
+        }
+    }
+    else {
+
+        # invalid form input
+        $c->res->body( '<span class="ui-icon ui-icon-circle-close"></span>' );
+        $c->logout();
+        $c->session->{'login-ok'} = 0;
+        $c->delete_session('logged out');
+    }
 }
 
 
