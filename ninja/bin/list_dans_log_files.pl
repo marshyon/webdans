@@ -60,20 +60,20 @@ if($qlog && $qip) {
         my $status = $line->{status};
         $status =~ s{\*}{}g;
         my $check_box = '';
-        #my $denied_icon = '<span class="ui-icon ui-icon-circle-close" style="float:left; margin:0 7px 50px 0;"></span>';
+        
         my $denied_icon = '<span class="ui-icon ui-icon-alert" style="float:left; "></span>';
-        #my $permitted_icon = '<span class="ui-icon ui-icon-circle-check " style="float:left; "></span>';
+       
         my $info_icon = '<span class="ui-icon ui-icon-info " style="float:left; "></span>';
-        #my $info_icon = '<span class="ui-icon ui-icon-info"></span>';
+      
         my $permitted_icon = '';
         $status =~ s{DENIED}{$denied_icon}g;
         $status =~ s{(?:GET|POST)}{$permitted_icon}g;
         $status .= '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
         my $ub = $line->{url_base};
-        #print D "??[$ub]\n";
-        print "<tr><td>" . $line->{time_str} . "</td><td>$qip</td><td>$status</td><td><a href=\"".$line->{url} . "\">" . $line->{url_base} . "</a>";
+     
+        print "<tr><td>" . $line->{time_str} . "</td><td>$qip</td><td>$status</td><td style=\"height: 28px;\"><a href=\"".$line->{url} . "\">" . $line->{url_base} . "</a>";
         if($line->{status} eq '*DENIED*') {
-            print "&nbsp; <a title=\"";
+            print "<a style=\"float: left;\" title=\"";
             print join("<br>", @{$line->{'codes'}});
             my $url_id = $line->{url_base};
             $url_id =~ s/\./_/g;
@@ -90,8 +90,9 @@ if($qlog && $qip) {
                $checked = 'checked="yes"';
             }
             
-            print "\" href=\"#row$c\">$info_icon</a>";
-            $check_box = "<input style=\"height:30em;\" type=\"checkbox\" id=\"checkbx_".$c."-$url_id\" $checked>";
+            print "\" href=\"#row$c\">?</a>";
+            
+            $check_box = "<input type=\"checkbox\" id=\"checkbx_".$c."-$url_id\" $checked>";
         }
         print "</td><td>$check_box</td></tr>\n";
         $c++;
@@ -99,7 +100,7 @@ if($qlog && $qip) {
     print "</tbody></table>\n";
     print "$jscript_checked\nupdate_table_checkboxes();\n</script>";
 
-    #close D;
+    
 }
 else {
     tie %dir, 'IO::Dir', $logs_files;
