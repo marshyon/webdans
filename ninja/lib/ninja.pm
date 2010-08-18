@@ -16,6 +16,11 @@ use Catalyst qw/
     -Debug
     ConfigLoader
     Static::Simple
+    Authentication
+    Authorization::Roles
+    Session
+    Session::State::Cookie
+    Session::Store::FastMmap
 /;
 
 extends 'Catalyst';
@@ -35,7 +40,40 @@ $VERSION = eval $VERSION;
 __PACKAGE__->config(
     name => 'ninja',
     # Disable deprecated behavior needed by old applications
-    disable_component_resolution_regex_fallback => 1,
+    #disable_component_resolution_regex_fallback => 1,
+
+                'Plugin::Authentication' =>
+                {
+                    default => {
+                        credential => {
+                            class => 'Password',
+                            password_field => 'password',
+                            password_type => 'clear'
+                        },
+                        store => {
+                            class => 'Minimal',
+                            users => {
+                                jon => {
+                                    password => "password",
+                                    editor => 'yes',
+                                    roles => [qw/edit delete/],
+                                },
+                                bob => {
+                                    password => "s00p3r",
+                                    editor => 'yes',
+                                    roles => [qw/edit delete/],
+                                },
+                                william => {
+                                    password => "s3cr3t",
+                                    roles => [qw/comment/],
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+
 );
 
 # Start the application
