@@ -10,8 +10,9 @@ use Config::Std;
 
 
 my %opts = ();
-getopts('l:i:c:', \%opts);  # options as above. Values in %opts
-
+getopts('l:i:c:h', \%opts);  # options as above. Values in %opts
+my $no_headers = $opts{h};
+#print "no_headers:[$no_headers]\n" ; exit;
 my $main_config = $opts{c} || 'main.cfg';
 print_help() unless ( -e $main_config );
 
@@ -32,7 +33,7 @@ if($qlog && $qip) {
     #use Data::Dumper;
     my $log_entries = extract_log_enties_from_log({log => "$logs_files$qlog", ip => $qip});
 
-    print '<table cellspacing="1" class="tablesorter"><thead><tr><th>Date</th><th>Address</th><th>Status</th><th>URL</th><th></th></tr></thead><tfoot><tr><th>Date</th><th>Address</th><th>Status</th><th>URL</th><th></th></tr></tfoot><tbody>';
+    print '<table cellspacing="1" class="tablesorter"><thead><tr><th>Date</th><th>Address</th><th>Status</th><th>URL</th><th></th></tr></thead><tfoot><tr><th>Date</th><th>Address</th><th>Status</th><th>URL</th><th></th></tr></tfoot><tbody>' unless $no_headers;
 
 
 
@@ -97,7 +98,7 @@ if($qlog && $qip) {
         print "</td><td>$check_box</td></tr>\n";
         $c++;
     }
-    print "</tbody></table>\n";
+    print "</tbody></table>\n" unless $no_headers;
     print "$jscript_checked\nupdate_table_checkboxes();\n</script>";
 
     
@@ -115,7 +116,7 @@ else {
     my @sorted = sort { $dir_file_ages{$b} cmp $dir_file_ages{$a} } keys %dir_file_ages;
 
     my $c = 0;
-    print '<table cellspacing="1" class="tablesorter"><thead><tr><th>Logfile</th><th>Date</th><th>Epoch</td><th>IP Address</th><th>GETs</th><th>POSTs</th><th>*DENIED*</th></tr></thead><tfoot><tr><th>Logfile</th><th>Date</th><th>Epoch</td><th>IP Address</th><th>GETs</th><th>POSTs</th><th>*DENIED*</th></tr></tfoot><tbody>';
+    print '<table cellspacing="1" class="tablesorter"><thead><tr><th>Logfile</th><th>Date</th><th>Epoch</td><th>IP Address</th><th>GETs</th><th>POSTs</th><th>*DENIED*</th></tr></thead><tfoot><tr><th>Logfile</th><th>Date</th><th>Epoch</td><th>IP Address</th><th>GETs</th><th>POSTs</th><th>*DENIED*</th></tr></tfoot><tbody>' unless $no_headers;
 
 
 
@@ -123,6 +124,7 @@ else {
     foreach my $key (@sorted) {
         my %summary = extract_ips_and_denied_from_log("$logs_files$key");
         foreach my $ip (sort(keys(%{$summary{'user'}}))) {
+            if($qip) { next unless $qip eq $ip }
             my $posts = $summary{'user'}->{$ip}->{'POST'} || 0;
             my $denied = $summary{'user'}->{$ip}->{'*DENIED*'} || 0;
             my $gets = $summary{'user'}->{$ip}->{'GET'} || 0;
@@ -136,7 +138,7 @@ else {
     }
 
 
-    print "</tbody></table>\n";
+    print "</tbody></table>\n" unless $no_headers;
 }
 
 # return a list of IP addresses and amount of 'DENIED' messages per IP 
