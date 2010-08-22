@@ -51,12 +51,21 @@ sub default :Path {
 
 sub ninja :Global {
     my ( $self, $c ) = @_;
-    my $lol = $c->req->params->{lol};
-    $c->stash->{lol} = $lol;
+
     my $ip = $c->req->params->{ip};
     my $log = $c->req->params->{log};
     my $curr_path = `pwd`;
     chomp($curr_path);
+
+    if ($c->session->{'login-ok'}) {
+         $c->stash->{logged_in} = "<div id=\"login_status\" style=\"float: right;\">logged in<span class=\"ui-icon ui-icon-circle-check\" style=\"float:right;\"></span><div style=\"float: left;\" id=\"logout-user\"><a href=\"#logout\">logout</a> &nbsp;</div></div>";
+    }
+    else {
+         my $client_address = $c->req->address();
+         $ip = $client_address; # overide requested ip address with actual ip address if not logged in
+         $c->stash->{logged_in} = "<div id=\"login_status\" style=\"float: right;\"><div style=\"float: left;\" id=\"login-user\"><a href=\"#\">login</a> &nbsp;</div></div>";
+    }
+
     my %cfg = get_config();
     my $uid;
     $c->stash->{user} = $c->session->{'date_str'} ;
@@ -73,10 +82,43 @@ sub ninja :Global {
         $c->stash->{tooltips} = 0;
         $c->stash->{title} = "DansGuardian Host Log Summary";
         my $list_dans_command = $curr_path . '/bin/list_dans_log_files.pl';
+        if (! $c->session->{'login-ok'}) {
+            $list_dans_command .= " -i $ip";
+        }
         $c->stash->{content} = `$list_dans_command`;
         $c->stash->{nav} = "<a href=\"/ninja\">Home</a>";
     }
 }
+
+sub list :Global {
+
+    my ( $self, $c ) = @_;
+    my $ip = $c->req->params->{ip};
+    my $log = $c->req->params->{log};
+    my $curr_path = `pwd`;
+    chomp($curr_path);
+
+   if (! $c->session->{'login-ok'}) {
+         my $client_address = $c->req->address();
+         $ip = $client_address; # overide requested ip address with actual ip address if not logged in
+    }
+
+
+
+    if($ip && $log) {
+        my $list_dans_command = $curr_path . "/bin/list_dans_log_files.pl -h -l $log -i $ip";
+        $c->stash->{content} = `$list_dans_command`;
+    }
+    else {
+        my $list_dans_command = $curr_path . '/bin/list_dans_log_files.pl -h';
+        if (! $c->session->{'login-ok'}) {
+            $list_dans_command .= " -i $ip";
+        }
+        $c->stash->{content} = `$list_dans_command`;
+    }
+}
+
+
 
 sub send :Global {
     my ( $self, $c ) = @_;
@@ -110,7 +152,7 @@ sub send :Global {
     }
     my $unblock_directory = '/etc/dansguardian/dans_controller/';
     my $status_file = $unblock_directory . "status.txt";
-    $c->stash->{server_status} = `cat $status_file` . " :: " . `uptime` ;
+    $c->stash->{server_status} = `cat $status_file` . "<br>" . `uptime` ;
 }
 
 sub login_status :Global {
@@ -128,7 +170,7 @@ sub login_status :Global {
 
 sub banned :Global {
     my ( $self, $c ) = @_;
-    my $status = 'nada';
+    my $status = 'nada';#ui-state-hover
     if($c->sessionid) {
         $status = $c->sessionid();
     }
@@ -161,6 +203,8 @@ sub login :Global {
     }
 
     use Data::Dumper;
+    #$c->res->body( Dumper($c->req->params) );
+    #return;
     if (    my $user = $c->req->params->{user}
         and my $password = $c->req->params->{password} )
     {
@@ -185,7 +229,9 @@ sub login :Global {
         else {
 
             # login incorrect
-            $c->res->body( '<span class="ui-icon ui-icon-circle-close"></span>' );
+            #$c->res->body( '<div style="float: right;" id="login-user"><a href="#">login yyy</a> &nbsp; <span class="ui-icon ui-icon-circle-close"></span></div>' );
+            #$c->res->body( "<div id=\"login_status\" style=\"float: right;\"><div style=\"float: left;\" id=\"login-user\"><a href=\"#\">login aaa</a> &nbsp;</div></div>" );
+            $c->res->body( "" );
             $c->logout();
             $c->session->{'login-ok'} = 0;
             $c->delete_session('logged out');
@@ -194,7 +240,9 @@ sub login :Global {
     else {
 
         # invalid form input
-        $c->res->body( '<span class="ui-icon ui-icon-circle-close"></span>' );
+        #$c->res->body( '<div style="float: right;" id="login-user"><a href="#">login xxx</a> &nbsp; <span class="ui-icon ui-icon-circle-close"></span></div>' );
+        #$c->res->body( "<div id=\"login_status\" style=\"float: right;\"><div style=\"float: left;\" id=\"login-user\"><a href=\"#\">login aaa</a> &nbsp;</div></div>" );
+        $c->res->body( "logged out" );
         $c->logout();
         $c->session->{'login-ok'} = 0;
         $c->delete_session('logged out');
