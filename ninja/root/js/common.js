@@ -18,7 +18,9 @@ $(document).ready(function() {
             });
 
             var height = $('.tablesorter').height() + 70;
+            if(height < 395) { height = 395; }
             $('#mainContent').height(height);
+            console.log('onload height is ', height, ' and rows are at ', numberOfRows);
 
             $('.pagesize').click(function() {
                 var height = $('.tablesorter').height() + 70;
@@ -27,13 +29,13 @@ $(document).ready(function() {
 
             $('#toggleButton').click(function() {
                 $('#disclaimer').slideToggle('slow');
-                var txt = $('#toggleButton').val();
-                if(txt == 'help') {
-                    $('#toggleButton').val('hide');
-                }
-                else {
-                    $('#toggleButton').val('help');
-                }
+            //    var txt = $('.ui-button-text').html();
+            //    if(txt == 'help') {
+            //        $('.ui-button-text').html('hide help');
+            //    }
+            //    else {
+            //        $('.ui-button-text').html('help');
+            //    }
             });
 });
 
