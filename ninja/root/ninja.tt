@@ -9,6 +9,17 @@
         
         </script>
         <link rel="stylesheet" href="/css/base.css" type="text/css" media="screen" charset="utf-8" />  
+        <link rel="stylesheet" href="/css/redmond/jquery-ui-1.8.4.custom.css" type="text/css" id="" media="print, projection, screen" />
+        <style type="text/css">
+                body { font-size: 62.5%; }
+                label, input { display:block; }
+                input.text { margin-bottom:12px; width:95%; padding: .4em; }
+                fieldset { padding:0; border:0; margin-top:25px; }
+                .ui-dialog .ui-state-error { padding: .3em; }
+                .validateTips { border: 1px solid transparent; padding: 0.3em; }
+
+        </style>
+
 	<script type="text/javascript" src="/lib/jquery-1.4.min.js"></script>
         <script type="text/javascript">
 
@@ -23,6 +34,18 @@
             $('#status').load('/send?action=status');
             $('#login').load('/login_status');
         }
+        function user_logged_in () {
+            var login_status = [];
+            $.ajax({
+              url: 'login_status',
+              async: false,
+              dataType: 'json',
+              success: function (json) {
+                login_status = json["login-ok"];
+              }
+            });
+            return login_status;
+        }
 
         $(document).ready(function() {
 
@@ -34,7 +57,149 @@
                 url: '/send',
                 timeout: 3000,
             });
+
+
+	    $("#dialog-form").hide();
+
+            $('#logout-user').click(function() {
+                $('#login_status').load('login?logout=1');
+            });
+            
+	    $('#login-user').click(function() { $('#dialog-form').dialog('open'); });
+
+
+
+		var name = $("#name"),
+			password = $("#password"),
+			allFields = $([]).add(name).add(password),
+			tips = $(".validateTips");
+
+
+
+		function updateTips(t) {
+			tips
+				.text(t)
+				.addClass('ui-state-highlight');
+			setTimeout(function() {
+				tips.removeClass('ui-state-highlight', 1500);
+			}, 500);
+		}
+
+		function checkLength(o,n,min,max) {
+
+			if ( o.val().length > max || o.val().length < min ) {
+				o.addClass('ui-state-error');
+				updateTips("Length of " + n + " must be between "+min+" and "+max+".");
+				return false;
+			} else {
+				return true;
+			}
+
+		}
+
+		function checkRegexp(o,regexp,n) {
+
+			if ( !( regexp.test( o.val() ) ) ) {
+				o.addClass('ui-state-error');
+				updateTips(n);
+				return false;
+			} else {
+				return true;
+			}
+
+		}
+
+
+
+
+
+		$("#dialog-form").dialog({
+			autoOpen: false,
+			height: 285,
+			width: 355,
+			modal: true,
+			buttons: {
+				'Submit Login Details': function() {
+					var bValid = true;
+					allFields.removeClass('ui-state-error');
+
+					bValid = bValid && checkLength(name,"username",3,16);
+					bValid = bValid && checkRegexp(name,/^[a-z]([0-9a-z_])+$/i,"Username may consist of a-z, 0-9, underscores, begin with a letter.");
+					bValid = bValid && checkLength(password,"password",5,16);
+					
+					if (bValid) {
+                                                var user_name = name.val();
+                                                var user_pass = password.val();
+                                                var login_url = "login?user=" + user_name + "&password=" + user_pass;
+                                                $('#login_status').load(login_url);
+
+
+                                                if(user_logged_in()) {
+
+                                                    $('#login_status').html('<span class="ui-icon ui-icon-circle-check"></span>');
+                                                    $('#login-user').hide();
+                                                    $('#logout-user').show();
+                                                    //$('#mainContent').load('/list');
+                                                    //$("table").tablesorter({widthFixed: true, widgets: ['zebra']}).tablesorterPager({container: $("#pager")}) 
+                                                    //$("table").trigger("update"); 
+                                                    //var sorting = [[2,1],[0,0]]; 
+                                                    // sort on the first column 
+                                                    //$("table").trigger("sorton",[sorting]); 
+                                                    //location.reload();
+
+
+                                                    $.get("list", function(html) { 
+                                                       var before = $("table").height();
+                                                       console.log('before : ', before);
+                                                       // append the "ajax'd" data to the table body 
+                                                       $("table tbody").append(html); 
+                                                       // let the plugin know that we made a update 
+                                                       $("table").trigger("update"); 
+                                                       // set sorting column and direction, this 
+                                                       // will sort on the first and third column 
+                                                       var sorting = [[2,1],[0,0]]; 
+                                                       // sort on the first column 
+                                                       $("table").trigger("sorton",[sorting]); 
+                                                       var height = $('.tablesorter').height();
+                                                       var after = $("table").height();
+                                                       console.log('after : ', before);
+                                                       $('#mainContent').height(height) + 75;
+                                                       $('#pager-spacer').height(130);
+
+ 
+                                                    });
+
+                                                } else {
+                                                    $('#login_status').html('<span class="ui-icon ui-icon-circle-close"></span>');
+                                                    $('#login-user').show();
+                                                    $('#logout-user').hide();
+                                                }
+
+						$(this).dialog('close');
+					}
+				},
+				Cancel: function() {
+					$(this).dialog('close');
+				}
+			},
+			close: function() {
+				allFields.val('').removeClass('ui-state-error');
+			}
+		});
+
+
+
         });
+
+
+
+
+
+
+
+
+
+
         </script>
 
 
@@ -72,41 +237,65 @@
 <div id="content">
 
 <h2>[% title %]</h2>
-[% nav %] [% user %]
+[% nav %] [% logged_in %]
 
 <div id="mainContent" style="height: 120px;">
 [% content %]
 </div>
 
-<div id="msg"></div>
-<strong>status</strong>
-<div id="status"></div>
-<strong>login</strong>
-<div id="login"></div>
+</div> <!-- end content-->
+
+<!-- <div id="msg"></div> -->
+<div style="background-color: #fff; height:100px;">
+<div style="text-align: center; background-color: #fff; height:45px;"></div>
+<div style="text-align: center;"; id="status"></div>
+</div>
+
 
 <p id="disclaimer"> 
-
 to sort columns click on a title heading<br>
-
+<br>
 keep holding the 'shift' key when clicking more than one heading to sort on multiple columns<br>
+<br>
+WebDans log viewer - ninja release 0.2 for narcsworld
 
-</p> <input type="button" id="toggleButton" value="help"/>
+</p> 
 
-<p>Ninja - log viewer - for narcsworld</p>
+<button id="toggleButton" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only " role="button" aria-disabled="false"><span class="ui-button-text">help</span></button>
 
-<div id="pager" class="pager">
+
+<div style="height: 20px; width: 405px;" id="pager" class="pager">
+<div id="pager-spacer" style="height: 40px;"></div>
 	<form>
-		<img src="/addons/pager/icons/first.png" class="first"/>
-		<img src="/addons/pager/icons/prev.png" class="prev"/>
-		<input type="text" class="pagedisplay"/>
-		<img src="/addons/pager/icons/next.png" class="next"/>
-		<img src="/addons/pager/icons/last.png" class="last"/>
-		 <select class="pagesize">
+                <div style="height: 50px; float:right;">
+		<select style="float:right;" class="pagesize">
 			<option selected="selected"  value="10">10</option>
 			<option value="20">20</option>
                         <option value="30">30</option>
 			<option  value="40">40</option>
 		</select> 
+
+
+                <div style="float:right; ">
+                    <div style="width: 46px; height: 4px;"></div>
+                    <div style="float:right; width: 5px; height: 20px; "></div>
+		    <img style="float: right;" src="/addons/pager/icons/last.png" class="last"/>
+                    <div style="float:right; width: 5px; height: 20px; "></div>
+		    <img style="float: right;" src="/addons/pager/icons/next.png" class="next"/>
+                </div>
+
+		<input style="float: right; width: 50px;" type="text" class="pagedisplay"/>
+
+                <div style="float:right; ">
+                    <div style=" width: 50px; height: 4px;"></div>
+                    <div style="float:right; width: 5px; height: 20px; "></div>
+		    <img style="float: right;" src="/addons/pager/icons/prev.png" class="prev"/>
+                    <div style="float:right; width: 5px; height: 20px; "></div>
+		    <img style="float: right;" src="/addons/pager/icons/first.png" class="first"/>
+                </div>
+
+
+                </div>
                
 	</form>
 </div>
@@ -141,10 +330,23 @@ keep holding the 'shift' key when clicking more than one heading to sort on mult
 
 
 
-</div> <!-- end content-->
+<!--</div> <!-- end content-->-->
 </div> <!-- end container -->
 
 </div"><!--wrapper960-->
+
+<div id="dialog-form" title="Login">
+	<p class="validateTips">Enter User Name and Password to Login.</p>
+
+	<form>
+	<fieldset>
+		<label for="name">Name</label>
+		<input type="text" name="name" id="name" class="text ui-widget-content ui-corner-all" />
+		<label for="password">Password</label>
+		<input type="password" name="password" id="password" value="" class="text ui-widget-content ui-corner-all" />
+	</fieldset>
+	</form>
+</div>
 
 </body>
 </html>
