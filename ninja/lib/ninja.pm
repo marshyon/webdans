@@ -58,15 +58,11 @@ __PACKAGE__->config(
                                     editor => 'yes',
                                     roles => [qw/edit delete/],
                                 },
-                                bob => {
-                                    password => "s00p3r",
+                                nigel => {
+                                    password => "password",
                                     editor => 'yes',
                                     roles => [qw/edit delete/],
                                 },
-                                william => {
-                                    password => "s3cr3t",
-                                    roles => [qw/comment/],
-                                }
                             }
                         }
                     }
