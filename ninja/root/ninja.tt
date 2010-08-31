@@ -3,6 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us">
 <head>
 	<title>[% title %]</title>
+        <script type="text/javascript" src="/js/firebug-lite.js"></script>
         <script type="text/javascript">
 
         document.write('<div id="loading"><p>loading ...</p></div><style "text/css">#wrapper960{visibility:hidden}#loading{margin:1px auto;width:1100px;height:0px;color:#00eeee;border:0px solid #777;padding:0px;text-align:left;}</style>');
@@ -55,14 +56,14 @@
             $.ajaxSetup({
                 type: 'POST',
                 url: '/send',
-                timeout: 3000,
+                timeout: 20000,
             });
 
 
 	    $("#dialog-form").hide();
 
             $('#logout-user').click(function() {
-                $('#login_status').load('login?logout=1');
+                $('#login_status').load('/login?logout=1');
             });
             
 	    $('#login-user').click(function() { $('#dialog-form').dialog('open'); });
@@ -148,7 +149,7 @@
                                                     //location.reload();
 
 
-                                                    $.get("list", function(html) { 
+                                                    $.get("/list", function(html) { 
                                                        var before = $("table").height();
                                                        console.log('before : ', before);
                                                        // append the "ajax'd" data to the table body 
@@ -205,7 +206,6 @@
 
 
         <link rel="stylesheet" href="/css/tooltip_styles.css" type="text/css" media="screen" charset="utf-8" />  
-	<link rel="stylesheet" href="/css/1jq.css" type="text/css" media="print, projection, screen" />
         <link rel="stylesheet" href="/css/base.css" type="text/css" media="screen" charset="utf-8" />  
 	<link rel="stylesheet" href="/css/themes/blue/style.css" type="text/css" id="" media="print, projection, screen" />
         <link rel="stylesheet" href="/css/redmond/jquery-ui-1.8.4.custom.css" type="text/css" id="" media="print, projection, screen" />
