@@ -62,6 +62,8 @@ sub ninja :Global {
     }
     else {
          my $client_address = $c->req->address();
+         # REMOVE THIS WHEN DONE WITH IT
+         # $client_address = '192.168.0.100';
          $ip = $client_address; # overide requested ip address with actual ip address if not logged in
          $c->stash->{logged_in} = "<div id=\"login_status\" style=\"float: right;\"><div style=\"float: left;\" id=\"login-user\"><a href=\"#\">login</a> &nbsp;</div></div>";
     }
@@ -96,10 +98,12 @@ sub list :Global {
     my $ip = $c->req->params->{ip};
     my $log = $c->req->params->{log};
     my $curr_path = `pwd`;
+    my $client_address = $c->req->address();
+    # REMOVE THIS WHEN DONE WITH IT
+    # $client_address = '192.168.0.100';
     chomp($curr_path);
 
    if (! $c->session->{'login-ok'}) {
-         my $client_address = $c->req->address();
          $ip = $client_address; # overide requested ip address with actual ip address if not logged in
     }
 
@@ -110,7 +114,7 @@ sub list :Global {
         $c->stash->{content} = `$list_dans_command`;
     }
     else {
-        my $list_dans_command = $curr_path . '/bin/list_dans_log_files.pl -h';
+        my $list_dans_command = $curr_path . '/bin/list_dans_log_files.pl -h -e ' . $client_address;
         if (! $c->session->{'login-ok'}) {
             $list_dans_command .= " -i $ip";
         }
@@ -138,6 +142,10 @@ sub send :Global {
         my $v1_mc_UUID_string  = create_UUID_as_string(UUID_V1);
         my $request_file = $request_dir . $v1_mc_UUID_string . ".req";
         my $client_address = $c->req->address();
+
+        # REMOVE THIS WHEN DONE WITH IT
+        # $client_address = '192.168.0.100';
+
         my %req = (
             'id' => $id,
             'name' => $name,
