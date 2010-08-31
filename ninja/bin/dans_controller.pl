@@ -26,6 +26,11 @@ my $smtp_from         = $config{'dans_controller'}{'smtp_from'};
 my $subject           = $config{'dans_controller'}{'subject'};
 my $debug             = $config{'dans_controller'}{'debug'};
 my $sleep             = $config{'dans_controller'}{'sleep'};
+my @banned_unblocks   = $config{'unblock banned list'}{'url'};
+
+my %banned_unblocks = ();
+
+map{ $banned_unblocks{$_}++ } @{$config{'unblock banned list'}{'url'}};
 
 
 if ( !$debug ) {
@@ -39,8 +44,10 @@ if ( !$debug ) {
 }
 
 while (1) {
+
     print "sleeping ....\n" if $debug;
     sleep $sleep;
+
     my ( $unblocks, $emails ) =
       check_for_unblock_requests( { 'dir' => $unblock_directory } );
     if ( %{$unblocks} ) {
@@ -117,7 +124,9 @@ sub update_whitelist {
         die "cant open whitelist : $whitelist for read : $!\n";
     }
 
+    ADDITION :
     foreach my $addition ( keys( %{ $s->{'add'} } ) ) {
+        next ADDITION if ( $banned_unblocks{$addition} );
         print ">>DEBUG>> addition : $addition\n" if $debug;
         $whitelist_items{$addition}++;
     }
@@ -143,10 +152,10 @@ sub restart_dansguardian {
     print ">>DEBUG>> stopping with ..($stop)\n" if $debug;
     update_status("stopping dansguardian ...");
 
-    system($stop);
+    #system($stop);
     update_status("starting dansguardian ...");
 
-    system($start);
+    #system($start);
     update_status("dansguardian restarted");
 }
 
@@ -175,7 +184,7 @@ sub check_dansguardian_process {
                 }
             );
         }
-        system($start_cmd);
+        #system($start_cmd);
     }
 }
 
