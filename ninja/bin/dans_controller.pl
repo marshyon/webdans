@@ -12,26 +12,25 @@ use Net::SMTP;
 
 my $main_config = shift || 'main.cfg';
 print_help() unless ( -e $main_config );
-read_config $main_config => my %config;
+my %config = load_config();
 
 my $pidfile           = $config{'dans_controller'}{'pidfile'};
-my $unblock_directory = $config{'dans_controller'}{'unblock_directory'};
-my $status_file       = $config{'dans_controller'}{'status_file'};
-my $whitelist         = $config{'dans_controller'}{'whitelist'};
-my $start_cmd         = $config{'dans_controller'}{'start_cmd'};
-my $stop_cmd          = $config{'dans_controller'}{'stop_cmd'};
-my $email_alerts      = $config{'dans_controller'}{'email_alerts'};
-my $smtp_host         = $config{'dans_controller'}{'smtp_host'};
-my $smtp_from         = $config{'dans_controller'}{'smtp_from'};
-my $subject           = $config{'dans_controller'}{'subject'};
+my $unblock_directory;
+my $status_file;
+my $whitelist;
+my $start_cmd;
+my $stop_cmd;
+my $email_alerts;
+my $smtp_host;
+$smtp_from;
+my $subject;
 my $debug             = $config{'dans_controller'}{'debug'};
 my $sleep             = $config{'dans_controller'}{'sleep'};
 my @banned_unblocks   = $config{'unblock banned list'}{'url'};
 
 my %banned_unblocks = ();
 
-map{ $banned_unblocks{$_}++ } @{$config{'unblock banned list'}{'url'}};
-
+dpkg-deb --build debian
 
 if ( !$debug ) {
     die "not root user\n"   unless is_root_user();
@@ -48,19 +47,30 @@ while (1) {
     print "sleeping ....\n" if $debug;
     sleep $sleep;
 
+    %config = reload_config();
+    map{ $banned_unblocks{$_}++ } @{$config{'unblock banned list'}{'url'}};
+
     my ( $unblocks, $emails ) =
+      $unblock_directory = $config{'dans_controller'}{'unblock_directory'};
       check_for_unblock_requests( { 'dir' => $unblock_directory } );
     if ( %{$unblocks} ) {
         my $message = "unblocks : \n" . Dumper($unblocks);
         $message .= "emails : \n" . Dumper($emails);
-        #my $to = 'marshyon@gmail.com';
+       
+        $email_alerts = $config{'dans_controller'}{'email_alerts'};
+        $subject = $config{'dans_controller'}{'subject'};
         foreach my $to (@{$email_alerts}) {
             mail_report( { to => $to, subject => $subject, message => $message } );
         }
         update_whitelist( { 'sites' => $unblocks } );
+        $start_cmd         = $config{'dans_controller'}{'start_cmd'};
+        $stop_cmd          = $config{'dans_controller'}{'stop_cmd'};
         restart_dansguardian( { 'start' => $start_cmd, 'stop' => $stop_cmd } );
     }
 
+    $smtp_host = $config{'dans_controller'}{'smtp_host'};
+    $smtp_from = $config{'dans_controller'}{'smtp_from'};
+    $subject = $config{'dans_controller'}{'subject'};
     check_dansguardian_process(
         {
             'host'    => $smtp_host,
@@ -109,6 +119,7 @@ sub check_for_unblock_requests {
 sub update_whitelist {
     my ($param) = @_;
     my $s = $param->{sites};
+    $whitelist = $config{'dans_controller'}{'whitelist'};
 
     my %whitelist_items = ();
     my $fh              = new IO::File;
@@ -123,6 +134,7 @@ sub update_whitelist {
     else {
         die "cant open whitelist : $whitelist for read : $!\n";
     }
+
 
     ADDITION :
     foreach my $addition ( keys( %{ $s->{'add'} } ) ) {
@@ -175,6 +187,7 @@ sub check_dansguardian_process {
     print "dans_procs : [$dans_procs]\n" if $debug;
 
     if ( $dans_procs < 10 ) {
+        $email_alerts = $config{'dans_controller'}{'email_alerts'};
         foreach my $to ( @{$email_alerts} ) {
             mail_report(
                 {
@@ -184,6 +197,7 @@ sub check_dansguardian_process {
                 }
             );
         }
+        $start_cmd = $config{'dans_controller'}{'start_cmd'};
         #system($start_cmd);
     }
 }
@@ -192,6 +206,7 @@ sub update_status {
 
     my $status = shift;
 
+    $status_file = $config{'dans_controller'}{'status_file'};
     if ( !-e $status_file ) { system("touch $status_file") }
     my $sfh = new IO::File;
     if ( $sfh->open("> $status_file") ) {
@@ -228,6 +243,8 @@ sub mail_report {
     my $to      = $param->{'to'};
     my $subject = $param->{'subject'};
     my $message = $param->{'message'};
+    my $smtp_host = $param->{'host'};
+    my $smtp_from = $param->{'from'};
     my $smtp = Net::SMTP->new($smtp_host);
 
     $smtp->mail( $ENV{USER} );
@@ -243,3 +260,10 @@ sub mail_report {
 
     $smtp->quit;
 }
+
+sub reload_config {
+    my %config = ();
+    read_config $main_config => %config;
+    return %config;
+}
+
