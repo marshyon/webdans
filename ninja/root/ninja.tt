@@ -140,30 +140,18 @@
                                                     $('#login_status').html('<span class="ui-icon ui-icon-circle-check"></span>');
                                                     $('#login-user').hide();
                                                     $('#logout-user').show();
-                                                    //$('#mainContent').load('/list');
-                                                    //$("table").tablesorter({widthFixed: true, widgets: ['zebra']}).tablesorterPager({container: $("#pager")}) 
-                                                    //$("table").trigger("update"); 
-                                                    //var sorting = [[2,1],[0,0]]; 
-                                                    // sort on the first column 
-                                                    //$("table").trigger("sorton",[sorting]); 
-                                                    //location.reload();
 
 
                                                     $.get("/list", function(html) { 
                                                        var before = $("table").height();
-                                                       console.log('before : ', before);
                                                        // append the "ajax'd" data to the table body 
                                                        $("table tbody").append(html); 
                                                        // let the plugin know that we made a update 
                                                        $("table").trigger("update"); 
-                                                       // set sorting column and direction, this 
-                                                       // will sort on the first and third column 
-                                                       var sorting = [[2,1],[0,0]]; 
-                                                       // sort on the first column 
+                                                       var sorting = [[6,1]]; 
                                                        $("table").trigger("sorton",[sorting]); 
                                                        var height = $('.tablesorter').height();
                                                        var after = $("table").height();
-                                                       console.log('after : ', before);
                                                        $('#mainContent').height(height) + 75;
                                                        $('#pager-spacer').height(130);
 
