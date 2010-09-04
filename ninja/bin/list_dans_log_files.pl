@@ -80,6 +80,7 @@ if ( $qlog && $qip ) {
           '<span class="ui-icon ui-icon-info " style="float:left; "></span>';
 
         my $permitted_icon = '';
+        $status =~ s{EXCEPTION}{-}g;
         $status =~ s{DENIED}{$denied_icon}g;
         $status =~ s{(?:GET|POST)}{$permitted_icon}g;
         $status .= '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
@@ -128,6 +129,7 @@ else {
 
     foreach ( keys %dir ) {
         next unless /$match/;
+        
         $dir_file_ages{$_} = $dir{$_}->ctime;
     }
 
@@ -143,12 +145,8 @@ else {
 
     my $dummy_count = 0;
     foreach my $key (@sorted) {
-
         my $summary = extract_ips_and_denied_from_log("$logs_files$key");
-        if ($summary) {
 
-
-        }
       LINE:
         foreach my $ip ( sort( keys( %{ $summary->{'user'} } ) ) ) {
             if ($qip) {
@@ -200,12 +198,13 @@ sub extract_ips_and_denied_from_log {
     my $mldbm_exists = 0;
     my $mldbm_file =
       $mldbm_dir . "access_log_" . time2str( "%Y%m%d", $st->mtime() ) . ".mdb";
-    $mldbm_exists = 1 if ( -e $mldbm_file );
 
     my $current_logfile = 0;
     if ( basename($file) eq 'access.log' ) {
         $current_logfile = 1;
+        unlink($mldbm_file) if ( -e $mldbm_file);
     }
+    $mldbm_exists = 1 if ( -e $mldbm_file );
 
     if ( !$current_logfile ) {
         tie %mldbm, 'MLDBM', $mldbm_file;
@@ -249,20 +248,19 @@ sub extract_log_entries_from_log {
     my @log_entries = ();
     my $st = stat($log) or die "No $log : $!";
 
-    #print "HERE with log [$log] ip [$qip]\n";
-
     my %mldbm        = ();
     my $mldbm_exists = 0;
     my $mldbm_file =
         $mldbm_dir
       . "access_log_entries_"
       . time2str( "%Y%m%d", $st->mtime() ) . ".mdb";
-    $mldbm_exists = 1 if ( -e $mldbm_file );
 
     my $current_logfile = 0;
     if ( basename($log) eq 'access.log' ) {
         $current_logfile = 1;
+        unlink( $mldbm_file ) if ( -e $mldbm_file );
     }
+    $mldbm_exists = 1 if ( -e $mldbm_file );
 
     if ( !$current_logfile ) {
         tie %mldbm, 'MLDBM', $mldbm_file;
@@ -295,7 +293,6 @@ sub extract_log_entries_from_log {
                 push @log_entries, \%log_hash;
             }
             $fh->close;
-            #print Dumper(\@log_entries); 
             $mldbm{'a'} = \@log_entries;
         }
     }
@@ -306,8 +303,6 @@ sub extract_log_entries_from_log {
     #    return \@log_entries;
     #}
     #else {
-    #print Dumper(\@{$mldbm{'a'}});
-        #print Dumper(\$mldbm{'a'});
         return \@{$mldbm{'a'}};
     #}
 
