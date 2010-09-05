@@ -24,6 +24,7 @@ my $match      = '^access\.log.*';
 my $logs_files = '/var/log/dansguardian/';
 my $mldbm_dir  = '/var/log/dansguardian/mldbm/';
 my %dir        = ();
+my $MAX_LINES=5000;
 
 read_config $main_config => my %config;
 
@@ -212,6 +213,8 @@ sub extract_ips_and_denied_from_log {
     my %tmp;
 
     my $count = 0;
+
+
     if ( !$mldbm_exists ) {
         my $fh = new IO::File;
         if ( $fh->open("< $file") ) {
@@ -267,17 +270,37 @@ sub extract_log_entries_from_log {
     }
     my @tmp;
 
-    #print "STILL HERE and looking for [$mldbm_file]\n";
-    #unlink($mldbm_file) if ( -e $mldbm_file );
 
     if ( ! $mldbm_exists ) {
 
-        #print "and file DOES NOT EXIST so opening up [$log]\n";
+        my $FILE_BLOATED = 0;
+        my $SKIP_TO;
 
+        my $line_count = 0;
         my $fh = new IO::File;
         if ( $fh->open("< $log") ) {
-          LINE:
+          LINE_COUNT:
             while (<$fh>) {
+                $line_count++;
+                if($line_count > $MAX_LINES) {
+                    $FILE_BLOATED = 1;
+                }
+                next LINE_COUNT;
+            }
+          $fh->close;
+          if($FILE_BLOATED) {
+              $SKIP_TO = ( $line_count - $MAX_LINES );
+          }
+          $line_count = 0;
+          $fh->open("< $log");
+          LINE_LOG:
+            while (<$fh>) {
+                $line_count++;
+                if($FILE_BLOATED) {
+                    if($line_count < $SKIP_TO) {
+                        next LINE_LOG;
+                    }
+                }
                 chomp();
                 my ( $time_str, $addr_str, @fields ) = split( / - */, $_ );
                 my ( $ip, $url, $status, @codes ) = split( /\s+/, $addr_str );
